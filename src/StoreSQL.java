@@ -5,7 +5,7 @@ public class StoreSQL {
 
     private static BufferedReader in = new BufferedReader(new InputStreamReader(System.in));
     private static PrintStream out = System.out;
-    private static final String STRING_CONECCION = "jdbc:sqlserver://localhost:1433;databaseName=StoreTec;user=sa;password=YourPassword;encrypt=false";
+    private static final String STRING_CONECCION = "jdbc:sqlserver://localhost:1433;databaseName=StoreTec;integratedSecurity=true;encrypt=true;trustServerCertificate=true;";
 
     public static void main(String[] args) {
         try {
@@ -41,31 +41,39 @@ public class StoreSQL {
     private static void register() {
         try {
             out.print("Ingrese número de cédula: ");
-            String identificacion = in.readLine();
+            long id = Long.parseLong(in.readLine()); // Use Long for BIGINT
             out.print("Ingrese nombre: ");
             String nombre = in.readLine();
-            out.print("Ingrese contraseña: ");
-            String password = in.readLine();
+            out.print("Ingrese contraseña (número): ");
+            long password = Long.parseLong(in.readLine()); // Use Long for BIGINT
             out.print("Ingrese correo electrónico: ");
             String email = in.readLine();
 
             // TypeUser ID for admin
-            int typeUserId = 1;
+            long typeUserId = 1L;
 
-            Connection conn = DriverManager.getConnection(STRING_CONECCION);
-            String query = "INSERT INTO PERSONA (ID, NOMBRE, PASSWORD, EMAIL, TYPEUSERID) VALUES (?, ?, ?, ?, ?)";
-            PreparedStatement pstmt = conn.prepareStatement(query);
-            pstmt.setString(1, identificacion);
-            pstmt.setString(2, nombre);
-            pstmt.setString(3, password);
-            pstmt.setString(4, email);
-            pstmt.setInt(5, typeUserId);
+            String query = "INSERT INTO [User] (id, nombre, password, email, typeUserId) VALUES (?, ?, ?, ?, ?)";
 
-            pstmt.executeUpdate();
-            out.println("Usuario registrado con éxito.");
-            conn.close();
+            try (Connection conn = DriverManager.getConnection(STRING_CONECCION);
+                 PreparedStatement pstmt = conn.prepareStatement(query)) {
+
+                pstmt.setLong(1, id);
+                pstmt.setString(2, nombre);
+                pstmt.setLong(3, password);
+                pstmt.setString(4, email);
+                pstmt.setLong(5, typeUserId);
+
+                pstmt.executeUpdate();
+                out.println("Usuario registrado con éxito.");
+            }
+        } catch (SQLException e) {
+            System.out.println("Error de SQL: " + e.getMessage());
+        } catch (IOException e) {
+            System.out.println("Error de entrada/salida: " + e.getMessage());
         } catch (Exception e) {
-            System.out.println(e.getMessage());
+            System.out.println("Error inesperado: " + e.getMessage());
         }
     }
+
+
 }
