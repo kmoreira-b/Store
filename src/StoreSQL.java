@@ -1,6 +1,6 @@
 import java.io.*;
 import java.sql.*;
-
+//test commit
 public class StoreSQL {
 
     private static BufferedReader in = new BufferedReader(new InputStreamReader(System.in));
