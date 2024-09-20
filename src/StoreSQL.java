@@ -1,6 +1,6 @@
 import java.io.*;
 import java.sql.*;
-//test commit
+
 public class StoreSQL {
 
     private static BufferedReader in = new BufferedReader(new InputStreamReader(System.in));
@@ -8,18 +8,25 @@ public class StoreSQL {
     private static final String STRING_CONECCION = "jdbc:sqlserver://localhost:1433;databaseName=StoreTec;integratedSecurity=true;encrypt=true;trustServerCertificate=true;";
 
     public static void main(String[] args) {
-        try {
-            welcomeMessage();
-            int choice = getUserChoice();
-            if (choice == 1) {
-                login();
-            } else if (choice == 2) {
-                register();
-            } else {
-                out.println("Opción no válida.");
+        boolean keepRunning = true;
+
+        while (keepRunning) {
+            try {
+                welcomeMessage();
+                int choice = getUserChoice();
+                if (choice == 1) {
+                    login();
+                } else if (choice == 2) {
+                    register();
+                } else if (choice == 3) {
+                    out.println("Saliendo del sistema...");
+                    keepRunning = false;
+                } else {
+                    out.println("Opción no válida.");
+                }
+            } catch (Exception e) {
+                System.out.println(e.getMessage());
             }
-        } catch (Exception e) {
-            System.out.println(e.getMessage());
         }
     }
 
@@ -28,6 +35,7 @@ public class StoreSQL {
         out.println("Seleccione una opción:");
         out.println("1 - Iniciar sesión");
         out.println("2 - Registrarse");
+        out.println("3 - Salir");
     }
 
     private static int getUserChoice() throws IOException {
@@ -41,15 +49,15 @@ public class StoreSQL {
     private static void register() {
         try {
             out.print("Ingrese número de cédula: ");
-            long id = Long.parseLong(in.readLine()); // Use Long for BIGINT
+            long id = Long.parseLong(in.readLine());
             out.print("Ingrese nombre: ");
             String nombre = in.readLine();
-            out.print("Ingrese contraseña (número): ");
-            long password = Long.parseLong(in.readLine()); // Use Long for BIGINT
+            out.print("Ingrese contraseña: ");
+            String password = in.readLine();
             out.print("Ingrese correo electrónico: ");
             String email = in.readLine();
 
-            // TypeUser ID for admin
+
             long typeUserId = 1L;
 
             String query = "INSERT INTO [User] (id, nombre, password, email, typeUserId) VALUES (?, ?, ?, ?, ?)";
@@ -59,7 +67,7 @@ public class StoreSQL {
 
                 pstmt.setLong(1, id);
                 pstmt.setString(2, nombre);
-                pstmt.setLong(3, password);
+                pstmt.setString(3, password); // Insert password as string
                 pstmt.setString(4, email);
                 pstmt.setLong(5, typeUserId);
 
@@ -74,6 +82,4 @@ public class StoreSQL {
             System.out.println("Error inesperado: " + e.getMessage());
         }
     }
-
-
 }
