@@ -401,7 +401,7 @@ public class StoreSQL {
         createUser();
     }
 
-    private static void manageProducts() throws IOException{
+    private static void manageProducts() throws IOException {
         boolean managingProducts = true;
 
         while (managingProducts) {
@@ -413,7 +413,8 @@ public class StoreSQL {
             out.println("5 - Agregar productos a favoritos");
             out.println("6 - Listar productos favoritos");
             out.println("7 - Eliminar producto de favoritos");
-            out.println("8 - Regresar al menú anterior");
+            out.println("8 - Manejar Categorías");
+            out.println("9 - Regresar al menú anterior");
 
             int choice = getUserChoice();
             switch (choice) {
@@ -439,6 +440,9 @@ public class StoreSQL {
                     deleteWishlist();
                     break;
                 case 8:
+                    manageCategories();
+                    break;
+                case 9:
                     managingProducts = false;
                     break;
                 default:
@@ -447,6 +451,138 @@ public class StoreSQL {
             }
         }
     }
+
+    private static void manageCategories() throws IOException {
+        boolean managingCategories = true;
+
+        while (managingCategories) {
+            out.println("Gestión de Categorías:");
+            out.println("1 - Crear Categoría");
+            out.println("2 - Listar Categorías");
+            out.println("3 - Actualizar Categoría por ID");
+            out.println("4 - Borrar Categoría por ID");
+            out.println("5 - Regresar al menú anterior");
+
+            int choice = getUserChoice();
+            switch (choice) {
+                case 1:
+                    createCategory();
+                    break;
+                case 2:
+                    listCategories();
+                    break;
+                case 3:
+                    updateCategoryById();
+                    break;
+                case 4:
+                    deleteCategoryById();
+                    break;
+                case 5:
+                    managingCategories = false;
+                    break;
+                default:
+                    out.println("Opción no válida.");
+                    break;
+            }
+        }
+    }
+
+    private static void createCategory() {
+        try (Connection connection = DriverManager.getConnection(CONNECTION_STRING)) {
+            out.print("Ingrese el nombre de la categoría: ");
+            String name = in.readLine();
+            out.print("Ingrese la descripción de la categoría: ");
+            String description = in.readLine();
+
+            String query = "INSERT INTO categoryProduct (name, description) VALUES (?, ?)";
+            try (PreparedStatement ps = connection.prepareStatement(query)) {
+                ps.setString(1, name);
+                ps.setString(2, description);
+                ps.executeUpdate();
+                out.println("Categoría creada con éxito.");
+            }
+        } catch (Exception e) {
+            out.println("Error al crear la categoría: " + e.getMessage());
+        }
+    }
+
+    private static void listCategories() {
+        try (Connection connection = DriverManager.getConnection(CONNECTION_STRING)) {
+            String query = "SELECT * FROM categoryProduct";
+            try (Statement stmt = connection.createStatement()) {
+                ResultSet rs = stmt.executeQuery(query);
+                out.println("Categorías registradas:");
+                while (rs.next()) {
+                    out.println("ID: " + rs.getLong("id") + ", Nombre: " + rs.getString("name") +
+                            ", Descripción: " + rs.getString("description"));
+                }
+            }
+        } catch (Exception e) {
+            out.println("Error al listar las categorías: " + e.getMessage());
+        }
+    }
+
+    private static void updateCategoryById() {
+        try (Connection connection = DriverManager.getConnection(CONNECTION_STRING)) {
+            out.print("Ingrese el ID de la categoría a actualizar: ");
+            long id = Long.parseLong(in.readLine());
+
+            String query = "SELECT * FROM categoryProduct WHERE id = ?";
+            try (PreparedStatement ps = connection.prepareStatement(query)) {
+                ps.setLong(1, id);
+                ResultSet rs = ps.executeQuery();
+
+                if (rs.next()) {
+                    out.println("Categoría encontrada: " + rs.getString("name"));
+                    out.print("Ingrese el nuevo nombre: ");
+                    String name = in.readLine();
+                    out.print("Ingrese la nueva descripción: ");
+                    String description = in.readLine();
+
+                    String updateQuery = "UPDATE categoryProduct SET name = ?, description = ? WHERE id = ?";
+                    try (PreparedStatement updateStmt = connection.prepareStatement(updateQuery)) {
+                        updateStmt.setString(1, name);
+                        updateStmt.setString(2, description);
+                        updateStmt.setLong(3, id);
+                        updateStmt.executeUpdate();
+                        out.println("Categoría actualizada con éxito.");
+                    }
+                } else {
+                    out.println("Categoría no encontrada.");
+                }
+            }
+        } catch (Exception e) {
+            out.println("Error al actualizar la categoría: " + e.getMessage());
+        }
+    }
+
+
+    private static void deleteCategoryById() {
+        try (Connection connection = DriverManager.getConnection(CONNECTION_STRING)) {
+            out.print("Ingrese el ID de la categoría a borrar: ");
+            long id = Long.parseLong(in.readLine());
+
+            String query = "SELECT * FROM categoryProduct WHERE id = ?";
+            try (PreparedStatement ps = connection.prepareStatement(query)) {
+                ps.setLong(1, id);
+                ResultSet rs = ps.executeQuery();
+
+                if (rs.next()) {
+                    String deleteQuery = "DELETE FROM categoryProduct WHERE id = ?";
+                    try (PreparedStatement deleteStmt = connection.prepareStatement(deleteQuery)) {
+                        deleteStmt.setLong(1, id);
+                        deleteStmt.executeUpdate();
+                        out.println("Categoría borrada con éxito.");
+                    }
+                } else {
+                    out.println("Categoría no encontrada.");
+                }
+            }
+        } catch (Exception e) {
+            out.println("Error al borrar la categoría: " + e.getMessage());
+        }
+    }
+
 
     private static void createProducts() {
 
