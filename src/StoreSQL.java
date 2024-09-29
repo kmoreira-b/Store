@@ -79,9 +79,10 @@ public class StoreSQL {
         while (loggedIn) {
             out.println("¿Qué desea hacer?");
             out.println("1 - Manejar usuarios");
-            out.println("2 - Manjear prodcutos");
-            out.println("3 - Manjear ordenes");
-            out.println("4 - Salir y cerrar sesión");
+            out.println("2 - Manejar productos");
+            out.println("3 - Manejar órdenes");
+            out.println("4 - Manejar proveedores");
+            out.println("5 - Salir y cerrar sesión");
 
             int choice = getUserChoice();
             switch (choice) {
@@ -95,8 +96,11 @@ public class StoreSQL {
                     manageOrders();
                     break;
                 case 4:
+                    manageProviders();
+                    break;
+                case 5:
                     out.println("Cerrando sesión...");
-                    loggedIn = false; // Exit back to main menu
+                    loggedIn = false;
                     break;
                 default:
                     out.println("Opción no válida.");
@@ -104,6 +108,151 @@ public class StoreSQL {
             }
         }
     }
+
+    private static void manageProviders() throws IOException {
+        boolean managingProviders = true;
+
+        while (managingProviders) {
+            out.println("Gestión de Proveedores:");
+            out.println("1 - Crear Proveedor");
+            out.println("2 - Listar Proveedores");
+            out.println("3 - Actualizar Proveedor por Vendor ID");
+            out.println("4 - Borrar Proveedor por Vendor ID");
+            out.println("5 - Regresar al menú anterior");
+
+            int choice = getUserChoice();
+            switch (choice) {
+                case 1:
+                    createProvider();
+                    break;
+                case 2:
+                    listProviders();
+                    break;
+                case 3:
+                    updateProviderById();
+                    break;
+                case 4:
+                    deleteProviderById();
+                    break;
+                case 5:
+                    managingProviders = false; 
+                    break;
+                default:
+                    out.println("Opción no válida.");
+                    break;
+            }
+        }
+    }
+
+    private static void createProvider() {
+        try (Connection connection = DriverManager.getConnection(CONNECTION_STRING)) {
+            out.print("Ingrese el nombre del proveedor: ");
+            String name = in.readLine();
+            out.print("Ingrese el teléfono del proveedor: ");
+            String tel = in.readLine();
+            out.print("Ingrese el email del proveedor: ");
+            String email = in.readLine();
+            out.print("Ingrese la dirección del proveedor: ");
+            String address = in.readLine();
+
+            String query = "INSERT INTO Supply (name, tel, email, address) VALUES (?, ?, ?, ?)";
+            try (PreparedStatement ps = connection.prepareStatement(query)) {
+                ps.setString(1, name);
+                ps.setString(2, tel);
+                ps.setString(3, email);
+                ps.setString(4, address);
+                ps.executeUpdate();
+                out.println("Proveedor creado con éxito.");
+            }
+        } catch (Exception e) {
+            out.println("Error al crear el proveedor: " + e.getMessage());
+        }
+    }
+
+    private static void listProviders() {
+        try (Connection connection = DriverManager.getConnection(CONNECTION_STRING)) {
+            String query = "SELECT * FROM Supply";
+            try (Statement stmt = connection.createStatement()) {
+                ResultSet rs = stmt.executeQuery(query);
+                out.println("Proveedores registrados:");
+                while (rs.next()) {
+                    out.println("ID: " + rs.getLong("id") + ", Nombre: " + rs.getString("name") +
+                            ", Teléfono: " + rs.getString("tel") + ", Email: " + rs.getString("email") +
+                            ", Dirección: " + rs.getString("address"));
+                }
+            }
+        } catch (Exception e) {
+            out.println("Error al listar los proveedores: " + e.getMessage());
+        }
+    }
+
+
+    private static void updateProviderById() {
+        try (Connection connection = DriverManager.getConnection(CONNECTION_STRING)) {
+            out.print("Ingrese el ID del proveedor a actualizar: ");
+            long id = Long.parseLong(in.readLine());
+
+            String query = "SELECT * FROM Supply WHERE id = ?";
+            try (PreparedStatement ps = connection.prepareStatement(query)) {
+                ps.setLong(1, id);
+                ResultSet rs = ps.executeQuery();
+
+                if (rs.next()) {
+                    out.println("Proveedor encontrado: " + rs.getString("name"));
+                    out.print("Ingrese el nuevo nombre: ");
+                    String name = in.readLine();
+                    out.print("Ingrese el nuevo teléfono: ");
+                    String tel = in.readLine();
+                    out.print("Ingrese el nuevo email: ");
+                    String email = in.readLine();
+                    out.print("Ingrese la nueva dirección: ");
+                    String address = in.readLine();
+
+                    String updateQuery = "UPDATE Supply SET name = ?, tel = ?, email = ?, address = ? WHERE id = ?";
+                    try (PreparedStatement updateStmt = connection.prepareStatement(updateQuery)) {
+                        updateStmt.setString(1, name);
+                        updateStmt.setString(2, tel);
+                        updateStmt.setString(3, email);
+                        updateStmt.setString(4, address);
+                        updateStmt.setLong(5, id);
+                        updateStmt.executeUpdate();
+                        out.println("Proveedor actualizado con éxito.");
+                    }
+                } else {
+                    out.println("Proveedor no encontrado.");
+                }
+            }
+        } catch (Exception e) {
+            out.println("Error al actualizar el proveedor: " + e.getMessage());
+        }
+    }
+
+    private static void deleteProviderById() {
+        try (Connection connection = DriverManager.getConnection(CONNECTION_STRING)) {
+            out.print("Ingrese el ID del proveedor a borrar: ");
+            long id = Long.parseLong(in.readLine());
+
+            String query = "SELECT * FROM Supply WHERE id = ?";
+            try (PreparedStatement ps = connection.prepareStatement(query)) {
+                ps.setLong(1, id);
+                ResultSet rs = ps.executeQuery();
+
+                if (rs.next()) {
+                    String deleteQuery = "DELETE FROM Supply WHERE id = ?";
+                    try (PreparedStatement deleteStmt = connection.prepareStatement(deleteQuery)) {
+                        deleteStmt.setLong(1, id);
+                        deleteStmt.executeUpdate();
+                        out.println("Proveedor borrado con éxito.");
+                    }
+                } else {
+                    out.println("Proveedor no encontrado.");
+                }
+            }
+        } catch (Exception e) {
+            out.println("Error al borrar el proveedor: " + e.getMessage());
+        }
+    }
+
 
     private static void manageUsers() throws IOException {
         boolean managingUsers = true;
